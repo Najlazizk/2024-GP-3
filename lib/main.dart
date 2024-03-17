@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:electech/pages/homePage.dart';
+import 'package:electech/pages/HomePage.dart';
+import 'package:electech/pages/SplashScreen.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key});
 
   @override
   Widget build(BuildContext context) {

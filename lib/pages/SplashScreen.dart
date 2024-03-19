@@ -7,7 +7,7 @@ import 'package:electech/pages/homePage.dart';
 // Declaring a StatefulWidget 'splashScreen' for a dynamic UI component
 class splashScreen extends StatefulWidget {
   // Constructor with an optional Key parameter
-  const splashScreen({Key? key}) : super(key: key);
+  const splashScreen({super.key});
 
   // Overriding createState() to return an instance of the private State class '_splashScreenState'
   @override
@@ -24,7 +24,7 @@ class _splashScreenState extends State<splashScreen> {
 
   countDown() {
     Timer.periodic(const Duration(seconds: 5), (timer) {
-      Route route = MaterialPageRoute(builder: (_) => HomePage());
+      Route route = MaterialPageRoute(builder: (_) => const HomePage());
       Navigator.pushAndRemoveUntil(context, route, (route) => false);
     });
   }
@@ -44,13 +44,6 @@ class _splashScreenState extends State<splashScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(20),
-              // Container for the splash screen image
-              child: Image.asset(
-                "images/logo.png", // Path to the image asset
-                width: 350, // Fit the image to the container's height
-                height: 350,
-                fit: BoxFit.fitWidth,
-              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 30),
@@ -60,7 +53,7 @@ class _splashScreenState extends State<splashScreen> {
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
                       textAlign: TextAlign.center,
-                      "Welcome To sonoff application where you can control your home using your mobile phone",
+                      "electech",
                       style: TextStyle(color: SonOff.blackColor),
                     ),
                   ),

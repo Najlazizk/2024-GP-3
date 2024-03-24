@@ -112,6 +112,7 @@ class _HomePageState extends State<HomePage> {
                       on1 = true;
                       StartTimer();
                       clicked ? sendRequest("1", "ON") : {};
+                      clicked ? sendRequest("2", "ON") : {};
                     },
                     child: Text(
                       "ON",
@@ -126,6 +127,7 @@ class _HomePageState extends State<HomePage> {
                       on1 = false;
                       stopAndResetTimer();
                       clicked ? sendRequest("1", "OFF") : {};
+                      clicked ? sendRequest("2", "OFF") : {};
                     },
                     child: Text(
                       "OFF",
@@ -151,7 +153,6 @@ class _HomePageState extends State<HomePage> {
                       clicked = true;
                       on2 = true;
                       StartTimer();
-                      clicked ? sendRequest("2", "ON") : {};
                     },
                     child: Text(
                       "ON",
@@ -165,7 +166,6 @@ class _HomePageState extends State<HomePage> {
                       clicked = true;
                       on2 = false;
                       stopAndResetTimer();
-                      clicked ? sendRequest("2", "OFF") : {};
                     },
                     child: Text(
                       "OFF",

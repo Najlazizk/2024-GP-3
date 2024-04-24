@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:electech/firebase_options.dart';
-import 'package:electech/splash_page.dart';
+import 'package:electech/pages/Auth.dart';
+import 'package:electech/pages/login_screen.dart';
+import 'package:electech/pages/signup_screen.dart';
+import 'package:electech/pages/splash_page.dart';
 import 'package:electech/pages/HomePage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -141,9 +144,15 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+      //home: Auth(),
+      routes: {
+        "/": (context) => const Auth(),
+        "HomeScreen": (context) => HomePage(),
+        "signupScreen": (context) => SignupScreenn(),
+        "loginScreen": (context) => LoginScreen(),
+      },
     );
   }
 }

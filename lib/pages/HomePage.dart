@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:electech/pages/auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -145,6 +147,10 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Expanded(
+                  child: SizedBox(
+                height: 10,
+              )),
               GestureDetector(
                 onTap: () {},
                 child: Container(
@@ -201,6 +207,24 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
+              Expanded(
+                  child: SizedBox(
+                height: 10,
+              )),
+              CupertinoButton(
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
+                  Navigator.push(
+                      context, MaterialPageRoute(builder: (context) => Auth()));
+                },
+                child: const Text("logout"),
+                color: Colors.red,
+                minSize: 50,
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+              SizedBox(
+                height: 20,
+              )
             ],
           ),
         ),

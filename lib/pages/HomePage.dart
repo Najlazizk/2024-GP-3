@@ -26,6 +26,19 @@ class _HomePageState extends State<HomePage> {
   void startTimer() {
     stopwatch.start();
     savingFcmToken();
+    // Automatically turn off the "off" button after three hours
+    const Duration threeHours = Duration(minutes: 1);
+    Timer(threeHours, () {
+      if (on1) {
+        setState(() {
+          clicked = false;
+          on1 = false;
+          stopAndResetTimer();
+          sendRequest("1", "OFF");
+          sendRequest("2", "OFF");
+        });
+      }
+    });
   }
 
   Future<void> savingFcmToken() async {

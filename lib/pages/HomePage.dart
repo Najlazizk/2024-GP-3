@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -20,9 +19,10 @@ class _HomePageState extends State<HomePage> {
   bool clicked = false;
   bool on1 = false;
   bool on2 = false;
-  var time = DateTime.now();
-
   bool on3 = false;
+
+  int selectedHour = 1; // Default selected hour
+
   void startTimer() {
     stopwatch.start();
     savingFcmToken();
@@ -33,7 +33,8 @@ class _HomePageState extends State<HomePage> {
     await storeToken(token);
   }
 
-  final _firebaseInstance = FirebaseFirestore.instance.collection('FcmTokens');
+  final _firebaseInstance = FirebaseFirestore.instance.collection(
+      'FcmTokens'); // Replace 'FcmTokens' with your desired collection name
 
   Future<void> storeToken(String token) async {
     try {
@@ -43,18 +44,26 @@ class _HomePageState extends State<HomePage> {
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
+        // Token already exists in Firestore
         print('Token already exists');
       } else {
+        // Token doesn't exist, save it with timestamp
         String randomId = _firebaseInstance.doc().id;
         DateTime now = DateTime.now();
-        DateTime expirationTime = now.add(const Duration(minutes: 2));
+
+        // Add 3 hours to the current time
+        DateTime expirationTime = now.add(Duration(minutes: selectedHour));
+
+        // Format the timestamp
         String formattedTime = DateFormat('h:mm a').format(expirationTime);
+        // Format the date
         String formattedDate = DateFormat('d/M/yyyy').format(expirationTime);
 
         await _firebaseInstance.doc(randomId).set({
           'fcmT': token,
-          'timestamp': formattedTime,
-          'date': formattedDate,
+          "Hours": selectedHour,
+          'timestamp': formattedTime, // Store formatted time
+          'date': formattedDate, // Store formatted date
         });
         print('Token stored successfully');
       }
@@ -74,6 +83,7 @@ class _HomePageState extends State<HomePage> {
   void stopAndResetTimer() async {
     stopTimer();
     await deleteToken();
+
     resetTimer();
   }
 
@@ -86,10 +96,12 @@ class _HomePageState extends State<HomePage> {
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
+        // Token exists in Firestore, delete it
         String documentId = querySnapshot.docs.first.id;
         await _firebaseInstance.doc(documentId).delete();
         print('Token deleted successfully');
       } else {
+        // Token not found in Firestore
         print('Token not found');
       }
     } catch (e) {
@@ -99,6 +111,9 @@ class _HomePageState extends State<HomePage> {
 
   String returnFormattedText() {
     var milli = stopwatch.elapsed.inMilliseconds;
+    String milliseconds = (milli % 1000)
+        .toString()
+        .padLeft(2, "0"); // 1001 % 1000 = 1, 1450 % 1000 = 450
     String seconds = ((milli ~/ 1000) % 60).toString().padLeft(2, "0");
     String minutes = ((milli ~/ 1000) ~/ 60).toString().padLeft(2, "0");
     String hours =
@@ -133,38 +148,53 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    height: 250,
-                    width: 250,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color.fromARGB(255, 2, 129, 55),
-                        width: 4,
-                      ),
+              GestureDetector(
+                onTap: () {},
+                child: Container(
+                  height: 250,
+                  width: 250,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color.fromARGB(255, 2, 129, 55),
+                      width: 4,
                     ),
-                    child: Text(
-                      returnFormattedText(),
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  ),
+                  child: Text(
+                    returnFormattedText(),
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 3),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CupertinoButton(
-                    onPressed: () {
+                  DropdownButton<int>(
+                    value: selectedHour,
+                    onChanged: (int? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedHour = newValue;
+                        });
+                      }
+                    },
+                    items: List.generate(
+                      3,
+                      (index) => DropdownMenuItem<int>(
+                        value: index + 1,
+                        child: Text('${index + 1}'),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
                       setState(() {
                         clicked = !clicked;
                         on1 = !on1;
@@ -172,109 +202,32 @@ class _HomePageState extends State<HomePage> {
                           startTimer();
                           sendRequest("1", "ON");
                           sendRequest("2", "ON");
-                          saveDateToFirestore('ON');
                         } else {
                           stopAndResetTimer();
                           sendRequest("1", "OFF");
                           sendRequest("2", "OFF");
-                          saveDateToFirestore('OFF');
                         }
                       });
                     },
-                    child: Text(on1 ? "OFF" : "ON"),
-                    color: Color.fromARGB(255, 45, 183, 77),
-                    minSize: 50,
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 15),
-              // DataTable
-              StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('FcmTokens')
-                    .orderBy('timestamp',
-                        descending:
-                            true) // Order by timestamp in descending order
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Text('Error: ${snapshot.error}'),
-                    );
-                  }
-
-                  final fcmTokens = snapshot.data?.docs;
-
-                  if (fcmTokens == null || fcmTokens.isEmpty) {
-                    return Expanded(
-                      child: DataTable(
-                        columns: [
-                          DataColumn(label: Text('Date')),
-                          DataColumn(label: Text('Time')),
-                          DataColumn(label: Text('Action')),
-                        ],
-                        rows: [], // Empty list of DataRow
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: on1
+                            ? Colors.green
+                            : Colors.green, // Change color based on state
                       ),
-                    );
-                  }
-
-// Filter the documents to include only those with timestamp within the first hour
-                  //final filteredTokens = fcmTokens.where((token) {
-                  //final timestamp = token['timestamp'];
-                  //if (timestamp != null && timestamp is String) {
-                  //final time = DateFormat('h:mm a').parse(timestamp);
-                  // Check if the timestamp is within the first hour
-                  //return time.hour == DateTime.now().hour;
-                  //}
-                  //return false;
-                  //}).toList();
-
-                  final filteredTokens = fcmTokens.where((token) {
-                    final date = token['date'];
-                    if (date != null && date is String) {
-                      final parts = date.split('/');
-                      if (parts.length == 3) {
-                        final month = int.tryParse(parts[1]);
-                        // Check if the date is within the current month
-                        return month == DateTime.now().month;
-                      }
-                    }
-                    return false;
-                  }).toList();
-
-                  return Expanded(
-                    child: SingleChildScrollView(
-                      // Wrap DataTable with SingleChildScrollView
-                      scrollDirection: Axis.vertical,
-                      child: DataTable(
-                        columns: [
-                          DataColumn(label: Text('Date')),
-                          DataColumn(label: Text('Time')),
-                          DataColumn(label: Text('Action')),
-                        ],
-                        rows: filteredTokens.map((fcmToken) {
-                          final date = fcmToken['date'] ?? '';
-                          final timestamp = fcmToken['timestamp'] ?? '';
-                          final action =
-                              (fcmToken.data() as Map<String, dynamic>?)
-                                          ?.containsKey('action') ??
-                                      false
-                                  ? fcmToken['action']
-                                  : '';
-
-                          return DataRow(cells: [
-                            DataCell(Text(date)),
-                            DataCell(Text(timestamp)),
-                            DataCell(Text(
-                                action)), // Use empty string if action is not available
-                          ]);
-                        }).toList(),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: Text(
+                        on1 ? "OFF" : "ON",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
             ],
           ),
@@ -296,23 +249,6 @@ class _HomePageState extends State<HomePage> {
       print("Success");
     } else {
       print("error");
-    }
-  }
-
-  Future<void> saveDateToFirestore(String action) async {
-    try {
-      DateTime now = DateTime.now();
-      String formattedTime = DateFormat('h:mm a').format(now);
-      String formattedDate = DateFormat('d/M/yyyy').format(now);
-
-      await _firebaseInstance.add({
-        'timestamp': formattedTime,
-        'date': formattedDate,
-        'action': action,
-      });
-      print('Date stored successfully');
-    } catch (e) {
-      print('Error storing date: $e');
     }
   }
 }

@@ -1,10 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:electech/firebase_options.dart';
+<<<<<<< HEAD
 import 'package:electech/pages/Auth.dart';
 import 'package:electech/pages/login_screen.dart';
 import 'package:electech/pages/signup_screen.dart';
 import 'package:electech/pages/splash_page.dart';
 import 'package:electech/pages/HomePage.dart';
+=======
+import 'package:electech/splash_page.dart';
+>>>>>>> 07558ddf391820e04b05ebbff96ab1577a1300b1
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';

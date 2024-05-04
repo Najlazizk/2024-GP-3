@@ -52,7 +52,7 @@ class _HomePageState extends State<HomePage> {
         DateTime now = DateTime.now();
 
         // Add 3 hours to the current time
-        DateTime expirationTime = now.add(const Duration(minutes: 2));
+        DateTime expirationTime = now.add(const Duration(minutes: 1));
 
         // Format the timestamp
         String formattedTime = DateFormat('h:mm a').format(expirationTime);
@@ -186,10 +186,10 @@ class _HomePageState extends State<HomePage> {
                       clicked ? sendRequest("1", "ON") : {};
                       clicked ? sendRequest("2", "ON") : {};
                     },
-                    child: const Text("ON"),
-                    color: Color.fromARGB(255, 45, 183, 77),
+                    color: const Color.fromARGB(255, 45, 183, 77),
                     minSize: 50,
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: const Text("ON"),
                   ),
                   const SizedBox(width: 15),
                   CupertinoButton(
@@ -200,10 +200,10 @@ class _HomePageState extends State<HomePage> {
                       clicked ? sendRequest("1", "OFF") : {};
                       clicked ? sendRequest("2", "OFF") : {};
                     },
-                    child: const Text("OFF"),
-                    color: Color.fromARGB(255, 45, 183, 77),
+                    color: const Color.fromARGB(255, 45, 183, 77),
                     minSize: 50,
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: const Text("OFF"),
                   ),
                 ],
               ),
@@ -233,7 +233,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   String sendingRequset(String relay, String status) {
-    String completeLink = 'http://192.168.254.169/cm?cmnd=Power$relay $status';
+    String completeLink = 'http://192.168.254.137/cm?cmnd=Power$relay $status';
     return completeLink;
   }
 

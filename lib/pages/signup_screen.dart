@@ -18,7 +18,7 @@ class _SignupScreenState extends State<SignupScreenn> {
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim());
-      Navigator.of(context).pushNamed("/");
+      Navigator.of(context).pushNamed("HomeScreen");
     }
   }
 

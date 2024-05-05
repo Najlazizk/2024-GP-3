@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -21,11 +21,26 @@ class _HomePageState extends State<HomePage> {
   bool clicked = false;
   bool on1 = false;
   bool on2 = false;
-
   bool on3 = false;
+
+  int selectedHour = 1; // Default selected hour
+
   void startTimer() {
     stopwatch.start();
     savingFcmToken();
+    // Automatically turn off the "off" button after three hours
+    const Duration threeHours = Duration(minutes: 15);
+    Timer(threeHours, () {
+      if (on1) {
+        setState(() {
+          clicked = false;
+          on1 = false;
+          stopAndResetTimer();
+          sendRequest("1", "OFF");
+          sendRequest("2", "OFF");
+        });
+      }
+    });
   }
 
   Future<void> savingFcmToken() async {
@@ -52,7 +67,7 @@ class _HomePageState extends State<HomePage> {
         DateTime now = DateTime.now();
 
         // Add 3 hours to the current time
-        DateTime expirationTime = now.add(const Duration(minutes: 1));
+        DateTime expirationTime = now.add(Duration(minutes: selectedHour));
 
         // Format the timestamp
         String formattedTime = DateFormat('h:mm a').format(expirationTime);
@@ -61,6 +76,7 @@ class _HomePageState extends State<HomePage> {
 
         await _firebaseInstance.doc(randomId).set({
           'fcmT': token,
+          "Hours": selectedHour,
           'timestamp': formattedTime, // Store formatted time
           'date': formattedDate, // Store formatted date
         });
@@ -174,36 +190,61 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 3),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CupertinoButton(
-                    onPressed: () {
-                      clicked = true;
-                      on1 = true;
-                      startTimer();
-                      clicked ? sendRequest("1", "ON") : {};
-                      clicked ? sendRequest("2", "ON") : {};
+                  DropdownButton<int>(
+                    value: selectedHour,
+                    onChanged: (int? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedHour = newValue;
+                        });
+                      }
                     },
-                    color: const Color.fromARGB(255, 45, 183, 77),
-                    minSize: 50,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: const Text("ON"),
+                    items: List.generate(
+                      3,
+                      (index) => DropdownMenuItem<int>(
+                        value: index + 1,
+                        child: Text('${index + 1}'),
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 15),
-                  CupertinoButton(
-                    onPressed: () {
-                      clicked = true;
-                      on1 = false;
-                      stopAndResetTimer();
-                      clicked ? sendRequest("1", "OFF") : {};
-                      clicked ? sendRequest("2", "OFF") : {};
+                  SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        clicked = !clicked;
+                        on1 = !on1;
+                        if (clicked) {
+                          startTimer();
+                          sendRequest("1", "ON");
+                          sendRequest("2", "ON");
+                        } else {
+                          stopAndResetTimer();
+                          sendRequest("1", "OFF");
+                          sendRequest("2", "OFF");
+                        }
+                      });
                     },
-                    color: const Color.fromARGB(255, 45, 183, 77),
-                    minSize: 50,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: const Text("OFF"),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: on1
+                            ? Colors.green
+                            : Colors.green, // Change color based on state
+                      ),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: Text(
+                        on1 ? "OFF" : "ON",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -233,7 +274,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   String sendingRequset(String relay, String status) {
-    String completeLink = 'http://192.168.254.137/cm?cmnd=Power$relay $status';
+    String completeLink = 'http://172.20.10.13vbg/cm?cmnd=Power$relay $status';
     return completeLink;
   }
 

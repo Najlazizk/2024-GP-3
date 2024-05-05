@@ -48,9 +48,24 @@ exports.sendDailyNotification = functions.pubsub.schedule("* * * * *") // Runs e
 
                 if (docData.timestamp == time) {
                     console.log(" sending daily notification:");
+                    console.log("Hours:", docData.Hours);
+
 
                     // Send notification
                     sendNotification(docData.fcmT, "electech", "it is been 1 hour open");
+                    const currentDate = new Date();
+                    const hours = currentDate.getHours() + docData.Hours;
+                    const minutes = currentDate.getMinutes();
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
+                    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+                    const updatetime = formattedHours + ':' + formattedMinutes + ' ' + ampm;
+                    console.log("time ==> " + updatetime);
+                    console.log(" Starting  notification:",);
+                    console.log("Time:", updatetime);
+
+                    // Update timestamp in Firestore
+                    doc.ref.update({ timestamp: updatetime });
                 }
             });
 
@@ -59,6 +74,7 @@ exports.sendDailyNotification = functions.pubsub.schedule("* * * * *") // Runs e
             console.error("Error sending daily notification:", error);
         }
     });
+
 
 
 // Function to send notification
@@ -81,3 +97,4 @@ function sendNotification(androidNotificationToken, title, body) {
             console.error("Error Sending Notification:", error);
         });
 }
+   

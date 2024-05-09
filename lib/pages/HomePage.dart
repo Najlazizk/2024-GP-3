@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'package:electech/pages/auth.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:electech/pages/notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -22,14 +21,14 @@ class _HomePageState extends State<HomePage> {
   bool on1 = false;
   bool on2 = false;
   bool on3 = false;
-
-  int selectedHour = 1; // Default selected hour
+  var token;
+  int minutes = 1; // Default selected hour
 
   void startTimer() {
     stopwatch.start();
     savingFcmToken();
     // Automatically turn off the "off" button after three hours
-    const Duration threeHours = Duration(minutes: 15);
+    const Duration threeHours = Duration(minutes: 30);
     Timer(threeHours, () {
       if (on1) {
         setState(() {
@@ -44,7 +43,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> savingFcmToken() async {
-    String token = (await FirebaseMessaging.instance.getToken())!;
+    token = (await FirebaseMessaging.instance.getToken())!;
     await storeToken(token);
   }
 
@@ -67,7 +66,7 @@ class _HomePageState extends State<HomePage> {
         DateTime now = DateTime.now();
 
         // Add 3 hours to the current time
-        DateTime expirationTime = now.add(Duration(minutes: selectedHour));
+        DateTime expirationTime = now.add(Duration(minutes: minutes));
 
         // Format the timestamp
         String formattedTime = DateFormat('h:mm a').format(expirationTime);
@@ -76,7 +75,7 @@ class _HomePageState extends State<HomePage> {
 
         await _firebaseInstance.doc(randomId).set({
           'fcmT': token,
-          "Hours": selectedHour,
+          "minutes": minutes,
           'timestamp': formattedTime, // Store formatted time
           'date': formattedDate, // Store formatted date
         });
@@ -147,26 +146,57 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  String sendingRequset(String relay, String status) {
+    String completeLink = 'http://192.168.254.137/cm?cmnd=Power$relay $status';
+    return completeLink;
+  }
+
+  sendRequest(String relay, String status) async {
+    String link = sendingRequset(relay, status);
+    final url = Uri.parse(link);
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      print("Success");
+    } else {
+      print("error");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "electech",
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color.fromARGB(255, 2, 129, 55),
         automaticallyImplyLeading: false,
+        actions: [
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Notifications(
+                            currentFCMToken: token,
+                          )));
+            },
+            child: Icon(
+              Icons.notifications,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(
+            width: 10,
+          )
+        ],
       ),
       body: SafeArea(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                  child: SizedBox(
-                height: 10,
-              )),
               GestureDetector(
                 onTap: () {},
                 child: Container(
@@ -190,28 +220,36 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // DropdownButton for selecting hours
                   DropdownButton<int>(
-                    value: selectedHour,
+                    value: minutes,
                     onChanged: (int? newValue) {
                       if (newValue != null) {
                         setState(() {
-                          selectedHour = newValue;
+                          minutes = newValue;
                         });
                       }
                     },
-                    items: List.generate(
-                      3,
-                      (index) => DropdownMenuItem<int>(
-                        value: index + 1,
-                        child: Text('${index + 1}'),
+                    items: [
+                      DropdownMenuItem<int>(
+                        value: 1,
+                        child: Text('1 minute'),
                       ),
-                    ),
+                      DropdownMenuItem<int>(
+                        value: 2,
+                        child: Text('2 minutes'),
+                      ),
+                      DropdownMenuItem<int>(
+                        value: 3,
+                        child: Text('3 minutes'),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 15),
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -248,44 +286,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              Expanded(
-                  child: SizedBox(
-                height: 10,
-              )),
-              CupertinoButton(
-                onPressed: () async {
-                  await FirebaseAuth.instance.signOut();
-                  Navigator.push(
-                      context, MaterialPageRoute(builder: (context) => Auth()));
-                },
-                child: const Text("logout"),
-                color: Colors.red,
-                minSize: 50,
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              ),
-              SizedBox(
-                height: 20,
-              )
             ],
           ),
         ),
       ),
     );
-  }
-
-  String sendingRequset(String relay, String status) {
-    String completeLink = 'http://172.20.10.13vbg/cm?cmnd=Power$relay $status';
-    return completeLink;
-  }
-
-  sendRequest(String relay, String status) async {
-    String link = sendingRequset(relay, status);
-    final url = Uri.parse(link);
-    final response = await http.get(url);
-    if (response.statusCode == 200) {
-      print("Success");
-    } else {
-      print("error");
-    }
   }
 }

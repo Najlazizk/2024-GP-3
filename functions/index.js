@@ -48,18 +48,19 @@ exports.sendDailyNotification = functions.pubsub.schedule("* * * * *") // Runs e
 
                 if (docData.timestamp == time) {
                     console.log(" sending daily notification:");
-                    console.log("Hours:", docData.Hours);
+                    console.log("Hours:", docData.minutes);
 
 
                     // Send notification
-                    sendNotification(docData.fcmT, "electech", "it is been 1 hour open");
-                    const currentDate = new Date();
-                    const hours = currentDate.getHours() + docData.Hours;
-                    const minutes = currentDate.getMinutes();
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
-                    const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
-                    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-                    const updatetime = formattedHours + ':' + formattedMinutes + ' ' + ampm;
+                    sendNotification(docData.fcmT, "electech", "it is been 1 hour open", docData.minutes);
+                    const totalMinutes = hours * 60 + minutes + docData.minutes; // Convert current time to minutes and add 30 minutes
+                    const newHours = Math.floor(totalMinutes / 60) % 24; // Convert minutes back to hours, considering the possibility of exceeding 24 hours
+                    const formattedHours = newHours === 0 ? 12 : (newHours > 12 ? newHours - 12 : newHours); // Format hours
+                    const formattedMinutes = totalMinutes % 60; // Get remaining minutes
+                    const ampm = newHours >= 12 ? 'PM' : 'AM'; // Determine AM or PM
+
+                    const updatetime = `${formattedHours}:${formattedMinutes < 10 ? '0' : ''}${formattedMinutes} ${ampm}`;
+
                     console.log("time ==> " + updatetime);
                     console.log(" Starting  notification:",);
                     console.log("Time:", updatetime);
@@ -79,7 +80,7 @@ exports.sendDailyNotification = functions.pubsub.schedule("* * * * *") // Runs e
 
 // Function to send notification
 // Function to send notification
-function sendNotification(androidNotificationToken, title, body) {
+function sendNotification(androidNotificationToken, title, body, minutess) {
     const payload = {
         notification: { title, body },
         token: androidNotificationToken,
@@ -92,9 +93,38 @@ function sendNotification(androidNotificationToken, title, body) {
             const currentDate = new Date();
             console.log(`Notification Sent at: ${currentDate.toLocaleString()}`);
             console.log("Successful Notification Sent");
+
+            // Format time as hours:minutes am/pm
+            const hours = currentDate.getHours() + 3;
+            const minutes = currentDate.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
+            const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+            const notificationTime = formattedHours + ':' + formattedMinutes + ' ' + ampm;
+
+            // Format date as DD/MM/YYYY
+            const day = currentDate.getDate();
+            const month = currentDate.getMonth() + 1; // Month is zero-based
+            const year = currentDate.getFullYear();
+            const notificationDate = day + '/' + month + '/' + year;
+
+            const notificationRef = database.collection("notificationList").doc();
+            notificationRef.set({
+                androidNotificationToken,
+                title,
+                body,
+                duration: minutess,
+                time: notificationTime,
+                date: notificationDate
+            })
+                .then(() => {
+                    console.log("Notification details saved in Firestore");
+                })
+                .catch(error => {
+                    console.error("Error saving notification details:", error);
+                });
         })
         .catch(error => {
             console.error("Error Sending Notification:", error);
         });
 }
-   

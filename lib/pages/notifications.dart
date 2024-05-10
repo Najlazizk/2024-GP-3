@@ -11,7 +11,7 @@ class Notifications extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 2, 129, 55),
         title: Text(
-          "Notifications",
+          "History",
           style: TextStyle(color: Colors.white),
         ),
         leading: InkWell(
@@ -34,9 +34,8 @@ class Notifications extends StatelessWidget {
               Center(
                 child: StreamBuilder(
                   stream: FirebaseFirestore.instance
-                      .collection('notificationList')
-                      .where('androidNotificationToken',
-                          isEqualTo: currentFCMToken)
+                      .collection('Notifications')
+                      .where('fcmToken', isEqualTo: currentFCMToken)
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
@@ -80,15 +79,17 @@ class Notifications extends StatelessWidget {
   List<DataRow> _buildRows(List<DocumentSnapshot> snapshot) {
     List<DataRow> rows = [];
     snapshot.forEach((document) {
-      Map<String, dynamic> data =
-          document.data() as Map<String, dynamic>; // Explicit cast
-      dynamic date = data['date'];
-      dynamic time = data['time'];
+      Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+      dynamic date = data['startDate'];
+      dynamic time = data['startTime'];
       dynamic duration = data['duration'];
-      String dateString = date is int ? date.toString() : date as String;
-      String timeString = time is int ? time.toString() : time as String;
+
+      // Null check before casting to String
+      String dateString = date != null ? date.toString() : 'Not Available';
+      String timeString = time != null ? time.toString() : 'Not Available';
       String durationString =
-          duration is int ? duration.toString() : duration as String;
+          duration != null ? duration.toString() : 'Not Available';
+
       rows.add(DataRow(
         cells: [
           DataCell(Text(dateString)),

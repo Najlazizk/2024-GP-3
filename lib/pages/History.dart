@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Notifications extends StatelessWidget {
+class history extends StatelessWidget {
   final currentFCMToken; // Assuming you pass the current FCM token to this widget
 
-  Notifications({this.currentFCMToken});
+  history({this.currentFCMToken});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 2, 129, 55),
+        backgroundColor: Color(0xFF9ED2FC), // Set to light blue color
         title: Text(
           "History",
           style: TextStyle(color: Colors.white),

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:electech/pages/notifications.dart';
+import 'package:electech/pages/History.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -170,7 +170,7 @@ class _HomePageState extends State<HomePage> {
           "electech",
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color.fromARGB(255, 2, 129, 55),
+        backgroundColor: Color(0xFF9ED2FC), // Set to light blue color
         automaticallyImplyLeading: false,
         actions: [
           InkWell(
@@ -178,7 +178,7 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => Notifications(
+                      builder: (context) => history(
                             currentFCMToken: token,
                           )));
             },
@@ -206,7 +206,7 @@ class _HomePageState extends State<HomePage> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color.fromARGB(255, 2, 129, 55),
+                      color: Color(0xFF9ED2FC),
                       width: 4,
                     ),
                   ),
@@ -270,8 +270,8 @@ class _HomePageState extends State<HomePage> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: on1
-                            ? Colors.green
-                            : Colors.green, // Change color based on state
+                            ? Color(0xFF9ED2FC)
+                            : Color(0xFF9ED2FC), // Change color based on state
                       ),
                       padding:
                           EdgeInsets.symmetric(horizontal: 20, vertical: 10),
